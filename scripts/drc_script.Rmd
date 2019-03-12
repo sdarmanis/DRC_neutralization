@@ -10,6 +10,7 @@ require(drc)
 library(gridExtra)
 library(grid)
 library(gplots)
+require(ggthemes)
 ```
 
 Import data 
@@ -38,12 +39,13 @@ list.gfp.max <- list()
 # For now its just AB1, AB2, etc ..
 abs.left <- paste("AB_L",1:nrow(pairs), sep="_")
 abs.right <- paste("AB_R",1:nrow(pairs), sep="_")
+# Create color wheel 
+col.wheel <- tableau_color_pal(palette = "tableau10")(10)
 ```
 
 
 ```{r Left half of plate}
 pdf("~/Desktop/DRC_neutralization/output/left_plate_reg.pdf",10,10)
-par(mfcol=c(3,3))
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
@@ -68,11 +70,14 @@ for(i in 1:nrow(pairs)){
   # Also store %GFP and max antibody 
   list.gfp.max[[i]] <- cor.means[1]*100
   # Plot
-  plot(drm(cor.means ~ conc,fct = LL.4()), xlab="log10Conc(ng/ml)",
-       ylab="%GFP", main=abs.left[i], ylim=c(0,1.2))
-  arrows(conc, cor.means-cor.st, conc, cor.means+cor.st, length=0.05, angle=90, code=3)}
-  
-}
+  plot(list.reg[[i]], col=col.wheel[i], 
+      xlab="log10Conc(ng/ml)",
+      ylab="%GFP", ylim=c(0,1.2), 
+     pch=19, cex=0.5)
+  arrows(conc, cor.means-cor.st, conc, cor.means+cor.st, length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
+  par(new=T)
+  }}
+  legend("right", "top", legend=abs.right, fill=col.wheel[1:length(abs.right)]) 
 # Name the listss 
 names(list.reg) <- abs.left
 names(list.eds) <- abs.left
@@ -95,7 +100,6 @@ dev.off()
 
 ```{r Right half of plate}
 pdf("~/Desktop/DRC_neutralization/output/right_plate_reg.pdf",10,10)
-par(mfcol=c(3,3))
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
@@ -120,11 +124,14 @@ for(i in 1:nrow(pairs)){
   # Also store %GFP and max antibody 
   list.gfp.max[[i]] <- cor.means[1]*100
   # Plot
-  plot(drm(cor.means ~ conc,fct = LL.4()), xlab="log10Conc(ng/ml)",
-       ylab="%GFP", main=abs.right[i], ylim=c(0,1.2))
-  arrows(conc, cor.means-cor.st, conc, cor.means+cor.st, length=0.05, angle=90, code=3)}
-  
-}
+  plot(list.reg[[i]], col=col.wheel[i], 
+      xlab="log10Conc(ng/ml)",
+      ylab="%GFP", ylim=c(0,1.2), 
+     pch=19, cex=0.5)
+  arrows(conc, cor.means-cor.st, conc, cor.means+cor.st, length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
+  par(new=T)
+  }}
+  legend("right", "top", legend=abs.right, fill=col.wheel[1:length(abs.right)]) 
 # Name the listss 
 names(list.reg) <- abs.right
 names(list.eds) <- abs.right
