@@ -1,12 +1,12 @@
 args = commandArgs(trailingOnly=TRUE)
 # Print the input file
-print(commandArgs(trailingOnly=TRUE))
+message(paste("Input csv is:", args[1]))
+message(paste("Output directory is:", args[3]))
+message(paste("Append string is:", args[2]))
 # test if there is at least one argument: if not, return an error
 if (length(args)==0) {
   stop("At least one argument must be supplied (input file).csv", call.=FALSE)
 }
-# Print the input file
-print(commandArgs(trailingOnly=TRUE))
 # Load data 
 data <- read.csv(args[1], sep=",", skip = 1) 
 # Libraries. Make sure they installed or install otherwise
@@ -39,8 +39,7 @@ abs.left <- paste("AB_L",1:nrow(pairs), sep="_")
 abs.right <- paste("AB_R",1:nrow(pairs), sep="_")
 # Create color wheel 
 col.wheel <- tableau_color_pal(palette = "tableau10")(10)
-
-pdf("~/Desktop/DRC_neutralization/output/left_plate_reg.pdf",10,10)
+pdf(paste(args[3], args[2], "_left_plate_reg.pdf", sep=""),10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
@@ -90,7 +89,7 @@ tbl <- tableGrob(mat.plot)
 plot(tbl)
 dev.off()
 # # 
-pdf("~/Desktop/DRC_neutralization/output/right_plate_reg.pdf",10,10)
+pdf(paste(args[3], args[2], "_right_plate_reg.pdf", sep=""),10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
