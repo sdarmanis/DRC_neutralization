@@ -15,4 +15,6 @@ This script accepts a single .csv file as an input and can be used in the follow
 https://cran.r-project.org/bin/macosx/
 
 2. From terminal, assuming that you are in DRC_neutralization/scripts : 
-$ Rscript --vanilla process_csv_to_pdf.R <full path to input csv> 
+$ Rscript --vanilla process_csv_to_pdf.R <full path to input csv> <pdf_label>
+  
+Output pdf will be named   <pdf_label>_left_plate_reg and <pdf_label>_right_plate_reg
