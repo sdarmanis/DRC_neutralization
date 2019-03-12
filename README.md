@@ -15,6 +15,7 @@ i) Make sure R is installed and in your path. To install R on Mac go here:
 https://cran.r-project.org/bin/macosx/
 
 ii) From terminal, assuming that you are in DRC_neutralization/scripts : 
-$ Rscript --vanilla process_csv_to_pdf.R <full path to input csv> <pdf_label> <full path to output directory>
+
+Rscript --vanilla process_csv_to_pdf.R <full path to input csv> <pdf_label> <full path to output directory>
   
 Output pdf will be named   <pdf_label>_left_plate_reg and <pdf_label>_right_plate_reg
