@@ -18,7 +18,6 @@ if(!require(gplots)){install.packages("gplots", repos='http://cloud.r-project.or
 if(!require(ggthemes)){install.packages("ggthemes", repos='http://cloud.r-project.org/')}
 # Convert Well ID to character 
 data$Well.ID <- as.character(data$Well.ID)
-head(data)
 # I assume the format is cols 1-11 and cols 14-23 with 11 and 23 being the no antibody controls 
 # I also assume that rows are paired BC, DE, etc .. 
 # First row is B and last row is O
@@ -39,6 +38,9 @@ abs.left <- paste("AB_L",1:nrow(pairs), sep="_")
 abs.right <- paste("AB_R",1:nrow(pairs), sep="_")
 # Create color wheel 
 col.wheel <- tableau_color_pal(palette = "tableau10")(10)
+# 
+message("Making left plate pdf")
+# Start plotting pdfs
 pdf(paste(args[3], args[2], "_left_plate_reg.pdf", sep=""),10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
@@ -60,7 +62,7 @@ for(i in 1:nrow(pairs)){
     # Fit using a 4-parameter log logistic model and store the model
     list.reg[[i]] <- drm(cor.means ~ conc,fct = LL.4())
     # Get ED5,10 and 50 values 
-    list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta")
+    list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta", display=F)
     # Also store %GFP and max antibody 
     list.gfp.max[[i]] <- cor.means[1]*100
     # Plot
@@ -71,7 +73,7 @@ for(i in 1:nrow(pairs)){
     arrows(conc, cor.means-cor.st, conc, cor.means+cor.st, length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
     par(new=T)
   }}
-legend("right", "top", legend=abs.right, fill=col.wheel[1:length(abs.right)]) 
+legend("right", "top", legend=abs.left, fill=col.wheel[1:length(abs.right)]) 
 # Name the listss 
 names(list.reg) <- abs.left
 names(list.eds) <- abs.left
@@ -89,6 +91,7 @@ tbl <- tableGrob(mat.plot)
 plot(tbl)
 dev.off()
 # # 
+message("Making right plate pdf")
 pdf(paste(args[3], args[2], "_right_plate_reg.pdf", sep=""),10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
@@ -110,7 +113,7 @@ for(i in 1:nrow(pairs)){
     # Fit using a 4-parameter log logistic model and store the model
     list.reg[[i]] <- drm(cor.means ~ conc,fct = LL.4())
     # Get ED5,10 and 50 values 
-    list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta")
+    list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta", display=F)
     # Also store %GFP and max antibody 
     list.gfp.max[[i]] <- cor.means[1]*100
     # Plot
