@@ -29,7 +29,7 @@ conc <- c(10000,2000, 400, 80, 16, 3.2, 0.64, 0.128, 0.0256, 0)
 conc.log <- log10(conc)
 # Create list to store regression models and ggplots 
 list.reg <- list()
-list.reg.plots <- list()
+list.rsd <- list()
 list.eds <- list()
 list.gfp.max <- list()
 # Provide a vector of antibody names 
@@ -65,6 +65,8 @@ for(i in 1:nrow(pairs)){
     list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta", display=F)
     # Also store %GFP and max antibody 
     list.gfp.max[[i]] <- cor.means[1]*100
+    # Also store the residual standard error 
+    list.rsd[[i]] <- abs(sqrt(summary(list.reg[[i]])$"resVar") / mean(fitted(list.reg[[i]])))
     # Plot
     plot(list.reg[[i]], col=col.wheel[i], 
          xlab="log10Conc(ng/ml)",
@@ -78,13 +80,14 @@ legend("right", "top", legend=abs.left, fill=col.wheel[1:length(abs.right)])
 names(list.reg) <- abs.left
 names(list.eds) <- abs.left
 # Plot the table of EDs and %GFP at max antibody for each 
-mat.plot <- as.data.frame(matrix(nrow=length(list.reg), ncol=4))
-colnames(mat.plot) <- c("ab ID", "ED50", "ED50 error", "%GFP at ab max")
+mat.plot <- as.data.frame(matrix(nrow=length(list.reg), ncol=5))
+colnames(mat.plot) <- c("ab ID", "ED50", "ED50 error", "%GFP at ab max", "RSD")
 for(i in 1:length(list.reg)){
   mat.plot[i,1] <- abs.left[i]
   mat.plot[i,2] <- round(list.eds[[i]][3,1],2) # get ED 50 
   mat.plot[i,3] <- round(list.eds[[i]][3,2],2) # get ED 50 st. error 
   mat.plot[i,4] <- round(list.gfp.max[[i]],2)
+  mat.plot[i,5] <- round(list.rsd[[i]],3)
 }
 # Plot table 
 tbl <- tableGrob(mat.plot)
@@ -116,6 +119,8 @@ for(i in 1:nrow(pairs)){
     list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta", display=F)
     # Also store %GFP and max antibody 
     list.gfp.max[[i]] <- cor.means[1]*100
+    # Also store the residual standard error 
+    list.rsd[[i]] <- abs(sqrt(summary(list.reg[[i]])$"resVar") / mean(fitted(list.reg[[i]])))
     # Plot
     plot(list.reg[[i]], col=col.wheel[i], 
          xlab="log10Conc(ng/ml)",
@@ -129,13 +134,14 @@ legend("right", "top", legend=abs.right, fill=col.wheel[1:length(abs.right)])
 names(list.reg) <- abs.right
 names(list.eds) <- abs.right
 # Plot the table of EDs and %GFP at max antibody for each 
-mat.plot <- as.data.frame(matrix(nrow=length(list.reg), ncol=4))
-colnames(mat.plot) <- c("ab ID", "ED50", "ED50 error", "%GFP at ab max")
+mat.plot <- as.data.frame(matrix(nrow=length(list.reg), ncol=5))
+colnames(mat.plot) <- c("ab ID", "ED50", "ED50 error", "%GFP at ab max", "RSD")
 for(i in 1:length(list.reg)){
-  mat.plot[i,1] <- abs.right[i]
+  mat.plot[i,1] <- abs.left[i]
   mat.plot[i,2] <- round(list.eds[[i]][3,1],2) # get ED 50 
   mat.plot[i,3] <- round(list.eds[[i]][3,2],2) # get ED 50 st. error 
   mat.plot[i,4] <- round(list.gfp.max[[i]],2)
+  mat.plot[i,5] <- round(list.rsd[[i]],3)
 }
 # Plot table 
 tbl <- tableGrob(mat.plot)
