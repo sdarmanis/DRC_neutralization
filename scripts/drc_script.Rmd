@@ -23,29 +23,45 @@ head(data)
 I assume the format is cols 1-11 and cols 14-23 with 11 and 23 being the no antibody controls 
 I also assume that rows are paired BC, DE, etc .. 
 First row is B and last row is O
-```{r Prepare}
+Pairs of wells are in the same row 
+```{r Prepare pairs matrix}
 # Crete a matrix of row pairs
 rows <- LETTERS[2:15]
 pairs <- matrix(rows, ncol=2, byrow = T)
-# Set the concentration vector in ng/ml
+pairs
+```
+
+Set the concentration vector in ng/ml
+```{r Prepare  concentration vector}
 conc <- c(10000,2000, 400, 80, 16, 3.2, 0.64, 0.128, 0.0256, 0)
 conc.log <- log10(conc)
+conc
+```
+
+```{r Create list to store output}
 # Create list to store regression models and ggplots 
 list.reg <- list()
-list.reg.plots <- list()
 list.eds <- list()
 list.gfp.max <- list()
-# Provide a vector of antibody names 
-# For now its just AB1, AB2, etc ..
+```
+
+Provide a vector of antibody names 
+For now its just AB1, AB2, etc ..
+```{r Provide names for each assay}
 abs.left <- paste("AB_L",1:nrow(pairs), sep="_")
 abs.right <- paste("AB_R",1:nrow(pairs), sep="_")
-# Create color wheel 
+```
+
+Create color wheel
+```{r Create color wheel}
 col.wheel <- tableau_color_pal(palette = "tableau10")(10)
+# Plot along concentration 
+plot(conc,1:length(conc), log="x", col=col.wheel[1:length(conc)], pch=19)
 ```
 
 
+# Process the left half of the plate
 ```{r Left half of plate}
-pdf("~/Desktop/DRC_neutralization/output/left_plate_reg.pdf",10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
@@ -66,7 +82,7 @@ for(i in 1:nrow(pairs)){
   # Fit using a 4-parameter log logistic model and store the model
   list.reg[[i]] <- drm(cor.means ~ conc,fct = LL.4())
   # Get ED5,10 and 50 values 
-  list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta")
+  list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta", display=F)
   # Also store %GFP and max antibody 
   list.gfp.max[[i]] <- cor.means[1]*100
   # Plot
@@ -77,7 +93,7 @@ for(i in 1:nrow(pairs)){
   arrows(conc, cor.means-cor.st, conc, cor.means+cor.st, length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
   par(new=T)
   }}
-  legend("right", "top", legend=abs.right, fill=col.wheel[1:length(abs.right)]) 
+  legend("right", "top", legend=abs.left, fill=col.wheel[1:length(abs.right)]) 
 # Name the listss 
 names(list.reg) <- abs.left
 names(list.eds) <- abs.left
@@ -93,13 +109,11 @@ for(i in 1:length(list.reg)){
 # Plot table 
 tbl <- tableGrob(mat.plot)
 plot(tbl)
-dev.off()
-
 ```
 
 
+# Process the right half of the plate
 ```{r Right half of plate}
-pdf("~/Desktop/DRC_neutralization/output/right_plate_reg.pdf",10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
@@ -120,7 +134,7 @@ for(i in 1:nrow(pairs)){
   # Fit using a 4-parameter log logistic model and store the model
   list.reg[[i]] <- drm(cor.means ~ conc,fct = LL.4())
   # Get ED5,10 and 50 values 
-  list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta")
+  list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta", display=F)
   # Also store %GFP and max antibody 
   list.gfp.max[[i]] <- cor.means[1]*100
   # Plot
@@ -147,7 +161,6 @@ for(i in 1:length(list.reg)){
 # Plot table 
 tbl <- tableGrob(mat.plot)
 plot(tbl)
-dev.off()
 ```
 
 
@@ -156,41 +169,3 @@ dev.off()
   
   
   
-```{r not used}
-  # new dose levels as support for the line
-  newdata <- as.data.frame(seq(0.01,10000,10))
-  # predictions and confidence intervals
-  pm <- predict(list.reg[[i]], newdata=newdata, interval="confidence")
-  # new data with predictions
-  newdata$p <- pm[,1]
-  newdata$pmin <- pm[,2]
-  newdata$pmax <- pm[,3]
-  newdata$conc0 <-  newdata$`seq(0.01, 10000, 10)`
-  newdata$conc0log <- log10(newdata$conc0)
-  # Change 0 to something non-zero for log axis 
-  df <- as.data.frame(cbind(cor.means, conc))
-  df$conc0 <- df$conc
-  df$conc0[df$conc0 == 0] <- 0.001
-  df$conc0log <- log10(df$conc0)
-  # add stdev for each mean on df
-  df$lower <- cor.means-cor.st
-  df$upper <- cor.means+cor.st
-  # Plot and store plots 
-  list.reg.plots[[i]] <-  ggplot(df, aes(x = conc0, y = cor.means)) +
-                          geom_point() +
-                          coord_trans(x="log") + 
-                          # geom_errorbar(data=df, mapping=aes(x=conc0, ymin=upper, ymax=lower), width=0.2, size=1, color="blue") + 
-                          geom_line(data=newdata, aes(x=conc0, y=p, colour="red") ) +
-                          geom_ribbon(data=newdata, aes(x=conc0, y=p, ymin=pmin, ymax=pmax), alpha=0.2) +
-                          theme_classic() + 
-                          coord_trans(x="log") + 
-                          xlab("Conc (ng/ml)") + ylab("%GFP") + ylim(c(0,1)) +
-                          theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "none") + 
-                          scale_x_continuous(breaks=conc) + 
-                          ggtitle(abs.left[i])
-```                        
-  
-
-
-
-
