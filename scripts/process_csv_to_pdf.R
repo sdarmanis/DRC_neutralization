@@ -25,7 +25,7 @@ data$Well.ID <- as.character(data$Well.ID)
 rows <- LETTERS[2:15]
 pairs <- matrix(rows, ncol=2, byrow = T)
 # Set the concentration vector in ng/ml
-conc <- c(10000,2000, 400, 80, 16, 3.2, 0.64, 0.128, 0.0256, 0)
+conc <- c(10000,2000, 400, 80, 16, 3.2, 0.64, 0.128, 0.0256)
 conc.log <- log10(conc)
 # Create list to store regression models and ggplots 
 list.reg <- list()
@@ -52,11 +52,14 @@ for(i in 1:nrow(pairs)){
   con.pair.1 <- pair.1$X.GFP.[grep(11, pair.1$Well.ID)] 
   con.pair.2 <- pair.2$X.GFP.[grep(11, pair.2$Well.ID)]
   # Correct the GFP values by dividing with the no antibody control 
-  cor.pair.1 <- pair.1$X.GFP./con.pair.1
-  cor.pair.2 <- pair.2$X.GFP./con.pair.2
+  cor.pair.1.t <- pair.1$X.GFP./con.pair.1
+  cor.pair.2.t <- pair.2$X.GFP./con.pair.2
+  # Remove the zero value 
+  cor.pair.1 <- cor.pair.1.t[-length(cor.pair.1.t)]
+  cor.pair.2 <- cor.pair.2.t[-length(cor.pair.2.t)]
   # Get average values 
   cor.means <- rowMeans(cbind(cor.pair.1, cor.pair.2))
-  cor.st <- apply(cbind(cor.pair.1, cor.pair.2), MARGIN = 1, sd)
+  cor.st <- apply(cbind(cor.pair.1, cor.pair.2), MARGIN = 1, range)
   # DOES IT MAKE SENSE ? 
   if(length(which(is.infinite(cor.means)==T)) ==0){
     # Fit using a 4-parameter log logistic model and store the model
@@ -69,10 +72,10 @@ for(i in 1:nrow(pairs)){
     list.rsd[[i]] <- abs(sqrt(summary(list.reg[[i]])$"resVar") / mean(fitted(list.reg[[i]])))
     # Plot
     plot(list.reg[[i]], col=col.wheel[i], 
-         xlab="log10Conc(ng/ml)",
-         ylab="%GFP", ylim=c(0,1.2), 
+         xlab="MAb Concentration (ng/ml)",
+         ylab="% Infection", ylim=c(0,1.2), 
          pch=19, cex=0.5)
-    arrows(conc, cor.means-cor.st, conc, cor.means+cor.st, length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
+    arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
     par(new=T)
   }}
 legend("right", "top", legend=abs.left, fill=col.wheel[1:length(abs.right)]) 
@@ -106,11 +109,14 @@ for(i in 1:nrow(pairs)){
   con.pair.1 <- pair.1$X.GFP.[grep(23, pair.1$Well.ID)] 
   con.pair.2 <- pair.2$X.GFP.[grep(23, pair.2$Well.ID)]
   # Correct the GFP values by dividing with the no antibody control 
-  cor.pair.1 <- pair.1$X.GFP./con.pair.1
-  cor.pair.2 <- pair.2$X.GFP./con.pair.2
+  cor.pair.1.t <- pair.1$X.GFP./con.pair.1
+  cor.pair.2.t <- pair.2$X.GFP./con.pair.2
+  # Remove the zero value 
+  cor.pair.1 <- cor.pair.1.t[-length(cor.pair.1.t)]
+  cor.pair.2 <- cor.pair.2.t[-length(cor.pair.2.t)]
   # Get average values 
   cor.means <- rowMeans(cbind(cor.pair.1, cor.pair.2))
-  cor.st <- apply(cbind(cor.pair.1, cor.pair.2), MARGIN = 1, sd)
+  cor.st <- apply(cbind(cor.pair.1, cor.pair.2), MARGIN = 1, range)
   # DOES IT MAKE SENSE ? 
   if(length(which(is.infinite(cor.means)==T)) ==0){
     # Fit using a 4-parameter log logistic model and store the model
@@ -123,10 +129,10 @@ for(i in 1:nrow(pairs)){
     list.rsd[[i]] <- abs(sqrt(summary(list.reg[[i]])$"resVar") / mean(fitted(list.reg[[i]])))
     # Plot
     plot(list.reg[[i]], col=col.wheel[i], 
-         xlab="log10Conc(ng/ml)",
-         ylab="%GFP", ylim=c(0,1.2), 
+         xlab="MAb Concentration (ng/ml)",
+         ylab="% Infection", ylim=c(0,1.2), 
          pch=19, cex=0.5)
-    arrows(conc, cor.means-cor.st, conc, cor.means+cor.st, length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
+    arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
     par(new=T)
   }}
 legend("right", "top", legend=abs.right, fill=col.wheel[1:length(abs.right)]) 
@@ -137,7 +143,7 @@ names(list.eds) <- abs.right
 mat.plot <- as.data.frame(matrix(nrow=length(list.reg), ncol=5))
 colnames(mat.plot) <- c("ab ID", "ED50", "ED50 error", "%GFP at ab max", "RSD")
 for(i in 1:length(list.reg)){
-  mat.plot[i,1] <- abs.left[i]
+  mat.plot[i,1] <- abs.right[i]
   mat.plot[i,2] <- round(list.eds[[i]][3,1],2) # get ED 50 
   mat.plot[i,3] <- round(list.eds[[i]][3,2],2) # get ED 50 st. error 
   mat.plot[i,4] <- round(list.gfp.max[[i]],2)
