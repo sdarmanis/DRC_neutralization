@@ -13,10 +13,11 @@ each half of the plate (containing what is currently in the output folder of thi
 This script accepts a single .csv file as an input and can be used in the following way :
 
 i) Make sure R is installed and in your path. To install R on Mac go [here](https://cran.r-project.org/bin/macosx/): 
-ii) From terminal, assuming that you are in DRC_neutralization/scripts : 
+
+ii) From terminal, assuming that you are in DRC_neutralization/scripts **(all paths are absolute)** : 
 
 ```
-Rscript --vanilla process_csv_to_pdf.R <full path to input csv> <pdf_label> <full path to output directory>
+Rscript --vanilla process_csv_to_pdf.R <input_csv_path> <pdf_label> <output_folder>
 ```
 
 Output pdf will be named: "pdf_label"_left_plate_reg and "pdf_label"_right_plate_reg
@@ -30,9 +31,9 @@ currently performs the same operation on ALL .csv files in the input folder).
 *(process_csv_to_pdf_batch.R)*
 
 In addition, the script generates a master table of all assay attributes (ED50, SDR, etc) in the output folder that can be
-used to query across all experiments. 
+used to query across all experiments. **(all paths are absolute)** 
 
 Usage (assuming you are in the scripts folder):
 ```
-Rscript --vanilla process_csv_to_pdf_batch.R "input_folder" "output_folder"
+Rscript --vanilla process_csv_to_pdf_batch.R <input_folder> <output_folder>
 ```
