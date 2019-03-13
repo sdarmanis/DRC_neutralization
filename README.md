@@ -20,9 +20,6 @@ ii) From terminal, assuming that you are in DRC_neutralization/scripts **(all pa
 Rscript --vanilla process_csv_to_pdf.R <input_csv_path> <pdf_label> <output_folder>
 ```
 
-Output pdf will be named: "pdf_label"_left_plate_reg and "pdf_label"_right_plate_reg
-
-
 **3**. A .R script that can be used from the terminal and will produce 2 pdf reports, one for 
 each half of the plate. The script requires two parameters, the input folder and the output folder. 
 It generates two pdf reports (one for each half of the plate) in the output folder for ALL .csv files
