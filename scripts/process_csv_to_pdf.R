@@ -9,6 +9,9 @@ if (length(args)==0) {
 }
 # Load data 
 data <- read.csv(args[1], sep=",", skip = 1) 
+
+data <- read.csv("~/Documents/Labwork/Projects/Biohub/DRC_neutralization/input/LG119_Plate2.csv", sep=",", skip = 1) 
+
 # Libraries. Make sure they installed or install otherwise
 if(!require(drc)){install.packages("drc", repos='http://cloud.r-project.org/' )}
 if(!require(gridExtra)){install.packages("gridExtra", repos='http://cloud.r-project.org/')}
@@ -32,6 +35,8 @@ list.reg <- list()
 list.rsd <- list()
 list.eds <- list()
 list.gfp.max <- list()
+list.means <- list()
+list.sd <- list()
 # Provide a vector of antibody names 
 # For now its just AB1, AB2, etc ..
 abs.left <- paste("AB_L",1:nrow(pairs), sep="_")
@@ -60,6 +65,9 @@ for(i in 1:nrow(pairs)){
   # Get average values 
   cor.means <- rowMeans(cbind(cor.pair.1, cor.pair.2))
   cor.st <- apply(cbind(cor.pair.1, cor.pair.2), MARGIN = 1, range)
+  # Store in list 
+  list.means[[i]] <- cor.means
+  list.sd[[i]] <- cor.st
   # DOES IT MAKE SENSE ? 
   if(length(which(is.infinite(cor.means)==T)) ==0){
     # Fit using a 4-parameter log logistic model and store the model
@@ -78,13 +86,13 @@ for(i in 1:nrow(pairs)){
     arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
     par(new=T)
   }}
-legend("right", "top", legend=abs.left, fill=col.wheel[1:length(abs.right)]) 
+legend("right", "top", legend=abs.left, fill=col.wheel[1:length(abs.left)]) 
 axis(side=1, c(0.01,0.1,1,10,100,1000,10000))
 axis(side=2, seq(0,1.5,0.1))
 # Name the listss 
 names(list.reg) <- abs.left
 names(list.eds) <- abs.left
-# Plot the table of EDs and %GFP at max antibody for each 
+# Make table of assay stats
 mat.plot <- as.data.frame(matrix(nrow=length(list.reg), ncol=5))
 colnames(mat.plot) <- c("ab ID", "ED50", "ED50 error", "%GFP at ab max", "RSD")
 for(i in 1:length(list.reg)){
@@ -93,6 +101,18 @@ for(i in 1:length(list.reg)){
   mat.plot[i,3] <- round(list.eds[[i]][3,2],2) # get ED 50 st. error 
   mat.plot[i,4] <- round(list.gfp.max[[i]],2)
   mat.plot[i,5] <- round(list.rsd[[i]],3)
+}
+# Plot each assay individually
+par(mfcol=c(2,2), mar=c(5,5,3,3))
+for(i in 1:length(list.reg)){
+  plot(list.reg[[i]], col=col.wheel[i], 
+       xlab="MAb Concentration (ng/ml)",
+       ylab="% Infection", ylim=c(0,1.5), 
+       pch=19, cex=0.5, axes = T, lty=3, main=names(list.reg)[i])
+  arrows(conc, list.sd[[i]][1,], conc, list.sd[[i]][2,], length=0.05, angle=90, code=3, lty=1, col=col.wheel[i])
+  # Add ED50 and SDR on the plot 
+  text(x=5, y=1.4, paste("ED50=",mat.plot[i,"ED50"],sep=""),cex = 0.7)
+  text(x=5, y=1.3, paste("RSD=",mat.plot[i,"RSD"],sep=""),cex = 0.7)
 }
 # Plot table 
 tbl <- tableGrob(mat.plot)
@@ -104,12 +124,12 @@ pdf(paste(args[3], args[2], "_right_plate_reg.pdf", sep=""),10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
-  pair.1 <- data[grep(pairs[i,1], data$Well.ID),][11:20,] # 11:20 selects X14-X23
-  pair.2 <- data[grep(pairs[i,2], data$Well.ID),][11:20,]
-  # Get GFP value and normalize to no antibody control (last entry X23)
-  # grep for 23 to get the X23 column from both replicates
-  con.pair.1 <- pair.1$X.GFP.[grep(23, pair.1$Well.ID)] 
-  con.pair.2 <- pair.2$X.GFP.[grep(23, pair.2$Well.ID)]
+  pair.1 <- data[grep(pairs[i,1], data$Well.ID),][1:10,] # 1:10 selects X02-X11
+  pair.2 <- data[grep(pairs[i,2], data$Well.ID),][1:10,]
+  # Get GFP value and normalize to no antibody control (last entry X11)
+  # grep for 11 to get the X11 column from both replicates
+  con.pair.1 <- pair.1$X.GFP.[grep(11, pair.1$Well.ID)] 
+  con.pair.2 <- pair.2$X.GFP.[grep(11, pair.2$Well.ID)]
   # Correct the GFP values by dividing with the no antibody control 
   cor.pair.1.t <- pair.1$X.GFP./con.pair.1
   cor.pair.2.t <- pair.2$X.GFP./con.pair.2
@@ -119,6 +139,9 @@ for(i in 1:nrow(pairs)){
   # Get average values 
   cor.means <- rowMeans(cbind(cor.pair.1, cor.pair.2))
   cor.st <- apply(cbind(cor.pair.1, cor.pair.2), MARGIN = 1, range)
+  # Store in list 
+  list.means[[i]] <- cor.means
+  list.sd[[i]] <- cor.st
   # DOES IT MAKE SENSE ? 
   if(length(which(is.infinite(cor.means)==T)) ==0){
     # Fit using a 4-parameter log logistic model and store the model
@@ -133,7 +156,7 @@ for(i in 1:nrow(pairs)){
     plot(list.reg[[i]], col=col.wheel[i], 
          xlab="MAb Concentration (ng/ml)",
          ylab="% Infection", ylim=c(0,1.5), 
-         pch=19, cex=0.5, axes=F)
+         pch=19, cex=0.5, axes = F)
     arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
     par(new=T)
   }}
@@ -143,7 +166,7 @@ axis(side=2, seq(0,1.5,0.1))
 # Name the listss 
 names(list.reg) <- abs.right
 names(list.eds) <- abs.right
-# Plot the table of EDs and %GFP at max antibody for each 
+# Make table of assay stats
 mat.plot <- as.data.frame(matrix(nrow=length(list.reg), ncol=5))
 colnames(mat.plot) <- c("ab ID", "ED50", "ED50 error", "%GFP at ab max", "RSD")
 for(i in 1:length(list.reg)){
@@ -152,6 +175,18 @@ for(i in 1:length(list.reg)){
   mat.plot[i,3] <- round(list.eds[[i]][3,2],2) # get ED 50 st. error 
   mat.plot[i,4] <- round(list.gfp.max[[i]],2)
   mat.plot[i,5] <- round(list.rsd[[i]],3)
+}
+# Plot each assay individually
+par(mfcol=c(2,2), mar=c(5,5,3,3))
+for(i in 1:length(list.reg)){
+  plot(list.reg[[i]], col=col.wheel[i], 
+       xlab="MAb Concentration (ng/ml)",
+       ylab="% Infection", ylim=c(0,1.5), 
+       pch=19, cex=0.5, axes = T, lty=3, main=names(list.reg)[i])
+  arrows(conc, list.sd[[i]][1,], conc, list.sd[[i]][2,], length=0.05, angle=90, code=3, lty=1, col=col.wheel[i])
+  # Add ED50 and SDR on the plot 
+  text(x=5, y=1.4, paste("ED50=",mat.plot[i,"ED50"],sep=""),cex = 0.7)
+  text(x=5, y=1.3, paste("RSD=",mat.plot[i,"RSD"],sep=""),cex = 0.7)
 }
 # Plot table 
 tbl <- tableGrob(mat.plot)
