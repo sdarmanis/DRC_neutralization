@@ -124,12 +124,12 @@ pdf(paste(args[3], args[2], "_right_plate_reg.pdf", sep=""),10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
-  pair.1 <- data[grep(pairs[i,1], data$Well.ID),][1:10,] # 1:10 selects X02-X11
-  pair.2 <- data[grep(pairs[i,2], data$Well.ID),][1:10,]
+  pair.1 <- data[grep(pairs[i,1], data$Well.ID),][11:20,] 
+  pair.2 <- data[grep(pairs[i,2], data$Well.ID),][11:20,]
   # Get GFP value and normalize to no antibody control (last entry X11)
   # grep for 11 to get the X11 column from both replicates
-  con.pair.1 <- pair.1$X.GFP.[grep(11, pair.1$Well.ID)] 
-  con.pair.2 <- pair.2$X.GFP.[grep(11, pair.2$Well.ID)]
+  con.pair.1 <- pair.1$X.GFP.[grep(23, pair.1$Well.ID)] 
+  con.pair.2 <- pair.2$X.GFP.[grep(23, pair.2$Well.ID)]
   # Correct the GFP values by dividing with the no antibody control 
   cor.pair.1.t <- pair.1$X.GFP./con.pair.1
   cor.pair.2.t <- pair.2$X.GFP./con.pair.2

@@ -1,70 +1,67 @@
----
-title: "Neutralization assays"
-author: "Spyros"
-date: "3/8/2019"
-output: html_document
----
+args = commandArgs(trailingOnly=TRUE)
+# Print the input file
+message(paste("Input directory is:", args[1]))
+message(paste("Output directory is:", args[2]))
+#################################################################
+# test if there is at least one argument: if not, return an error
+if (length(args)!=2) {
+  stop("Input and output directory need to be supplied", call.=FALSE)
+}
+#################################################################
+# Libraries. Make sure they installed or install otherwise
+if(!require(drc)){install.packages("drc", repos='http://cloud.r-project.org/' )}
+if(!require(gridExtra)){install.packages("gridExtra", repos='http://cloud.r-project.org/')}
+if(!require(grid)){install.packages("grid", repos='http://cloud.r-project.org/')}
+if(!require(ggplot2)){install.packages("ggplot2", repos='http://cloud.r-project.org/')}
+if(!require(gplots)){install.packages("gplots", repos='http://cloud.r-project.org/')}
+if(!require(ggthemes)){install.packages("ggthemes", repos='http://cloud.r-project.org/')}
+#################################################################
+# Get all csv files in input directory 
+all.files <- list.files(args[1])
+# Remove .csv from the name and use the rest as an append string for the output 
+all.appends <- gsub(".csv", "", all.files)
+#################################################################
+# Provide a vector of antibody names 
+# For now its just AB1, AB2, etc ..
+# NEED TO Allow input of names from another csv file in the future..
+abs.left <- paste("AB_L",1:15, sep="_")
+abs.right <- paste("AB_R",1:15, sep="_")
+#################################################################
+# Create color wheel 
+col.wheel <- tableau_color_pal(palette = "tableau10")(10)
+################################################################# 
 
-```{r setup, include=FALSE}
-require(drc)
-library(gridExtra)
-library(grid)
-library(gplots)
-require(ggthemes)
-```
-
-Import data 
-```{r Import}
-data <- read.csv("~/Documents/Labwork/Projects/Biohub/DRC_neutralization/input/LG119_Plate2.csv", sep=",", skip = 1)
+# Start looping over each csv
+for(k in 1:length(all.files)){
+# Get plate name (directory+filename)
+plate <- paste(args[1],all.files[k], sep="")
+# Load data 
+data <- read.csv(plate, sep=",", skip = 1) 
+# Convert Well ID to character 
 data$Well.ID <- as.character(data$Well.ID)
-head(data)
-```
-
-I assume the format is cols 1-11 and cols 14-23 with 11 and 23 being the no antibody controls 
-I also assume that rows are paired BC, DE, etc .. 
-First row is B and last row is O
-Pairs of wells are in the same row 
-```{r Prepare pairs matrix}
+# I assume the format is cols 1-11 and cols 14-23 with 11 and 23 being the no antibody controls 
+# I also assume that rows are paired BC, DE, etc .. 
+# First row is B and last row is O
 # Crete a matrix of row pairs
 rows <- LETTERS[2:15]
 pairs <- matrix(rows, ncol=2, byrow = T)
-pairs
-```
-
-Set the concentration vector in ng/ml
-```{r Prepare  concentration vector}
+# Set the concentration vector in ng/ml
 conc <- c(10000,2000, 400, 80, 16, 3.2, 0.64, 0.128, 0.0256)
 conc.log <- log10(conc)
-conc
-```
-
-```{r Create list to store output}
 # Create list to store regression models and ggplots 
 list.reg <- list()
+list.rsd <- list()
 list.eds <- list()
 list.gfp.max <- list()
-list.rsd <- list()
 list.means <- list()
 list.sd <- list()
-```
-
-Provide a vector of antibody names 
-For now its just AB1, AB2, etc ..
-```{r Provide names for each assay}
-abs.left <- paste("AB_L",1:nrow(pairs), sep="_")
-abs.right <- paste("AB_R",1:nrow(pairs), sep="_")
-```
-
-Create color wheel
-```{r Create color wheel}
-col.wheel <- tableau_color_pal(palette = "tableau10")(10)
-# Plot along concentration 
-pie(rep(0.1,10), col=col.wheel)
-```
-
-
-# Process the left half of the plate
-```{r Left half of plate}
+#################################################################
+# Start plotting pdfs
+#################################################################
+# Left 
+#################################################################
+pdf(paste(args[2],all.appends[k],"_L.pdf",sep=""),10,10)
+# Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
   pair.1 <- data[grep(pairs[i,1], data$Well.ID),][1:10,] # 1:10 selects X02-X11
@@ -100,20 +97,15 @@ for(i in 1:nrow(pairs)){
          xlab="MAb Concentration (ng/ml)",
          ylab="% Infection", ylim=c(0,1.5), 
          pch=19, cex=0.5, axes = F)
-    suppressWarnings(arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i]))
+    arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
     par(new=T)
   }}
 legend("right", "top", legend=abs.left, fill=col.wheel[1:length(abs.left)]) 
 axis(side=1, c(0.01,0.1,1,10,100,1000,10000))
 axis(side=2, seq(0,1.5,0.1))
-```
-
-
-Make and plot table (Left)
-```{r }
 # Name the listss 
-names(list.reg) <- abs.left
-names(list.eds) <- abs.left
+names(list.reg) <- abs.left[1:length(list.reg)]
+names(list.eds) <- abs.left[1:length(list.reg)]
 # Make table of assay stats
 mat.plot <- as.data.frame(matrix(nrow=length(list.reg), ncol=5))
 colnames(mat.plot) <- c("ab ID", "ED50", "ED50 error", "%GFP at ab max", "RSD")
@@ -124,34 +116,32 @@ for(i in 1:length(list.reg)){
   mat.plot[i,4] <- round(list.gfp.max[[i]],2)
   mat.plot[i,5] <- round(list.rsd[[i]],3)
 }
-# Plot table 
-tbl <- tableGrob(mat.plot)
-plot(tbl)
-```
-
-Plot each assay individually (Left)
-```{r }
-par(mfcol=c(3,3), mar=c(5,5,3,3))
+# Plot each assay individually
+par(mfcol=c(2,2), mar=c(5,5,3,3))
 for(i in 1:length(list.reg)){
   plot(list.reg[[i]], col=col.wheel[i], 
        xlab="MAb Concentration (ng/ml)",
        ylab="% Infection", ylim=c(0,1.5), 
        pch=19, cex=0.5, axes = T, lty=3, main=names(list.reg)[i])
-  suppressWarnings(arrows(conc, list.sd[[i]][1,], conc, list.sd[[i]][2,], length=0.05, angle=90, code=3, lty=1, col=col.wheel[i]))
+  arrows(conc, list.sd[[i]][1,], conc, list.sd[[i]][2,], length=0.05, angle=90, code=3, lty=1, col=col.wheel[i])
   # Add ED50 and SDR on the plot 
   text(x=5, y=1.4, paste("ED50=",mat.plot[i,"ED50"],sep=""),cex = 0.7)
   text(x=5, y=1.3, paste("RSD=",mat.plot[i,"RSD"],sep=""),cex = 0.7)
-  }
-```
-
-
-# Process the right half of the plate
-```{r message=FALSE}
+}
+# Plot table 
+tbl <- tableGrob(mat.plot)
+plot(tbl)
+dev.off()
+#################################################################
+# right 
+#################################################################
+pdf(paste(args[2],all.appends[k],"_R.pdf",sep=""),10,10)
+# Iterate for every row pair 
 for(i in 1:nrow(pairs)){
   # Subset data from main data frame 
   pair.1 <- data[grep(pairs[i,1], data$Well.ID),][11:20,] 
   pair.2 <- data[grep(pairs[i,2], data$Well.ID),][11:20,]
-  # Get GFP value and normalize to no antibody control (last entry X23)
+  # Get GFP value and normalize to no antibody control (last entry X11)
   # grep for 11 to get the X11 column from both replicates
   con.pair.1 <- pair.1$X.GFP.[grep(23, pair.1$Well.ID)] 
   con.pair.2 <- pair.2$X.GFP.[grep(23, pair.2$Well.ID)]
@@ -182,19 +172,15 @@ for(i in 1:nrow(pairs)){
          xlab="MAb Concentration (ng/ml)",
          ylab="% Infection", ylim=c(0,1.5), 
          pch=19, cex=0.5, axes = F)
-    suppressWarnings(arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i]))
+    arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
     par(new=T)
   }}
 legend("right", "top", legend=abs.right, fill=col.wheel[1:length(abs.right)]) 
 axis(side=1, c(0.01,0.1,1,10,100,1000,10000))
 axis(side=2, seq(0,1.5,0.1))
-```
-
-Make and plot table (Right)
-```{r }
 # Name the listss 
-names(list.reg) <- abs.right
-names(list.eds) <- abs.right
+names(list.reg) <- abs.right[1:length(list.reg)]
+names(list.eds) <- abs.right[1:length(list.reg)]
 # Make table of assay stats
 mat.plot <- as.data.frame(matrix(nrow=length(list.reg), ncol=5))
 colnames(mat.plot) <- c("ab ID", "ED50", "ED50 error", "%GFP at ab max", "RSD")
@@ -205,28 +191,22 @@ for(i in 1:length(list.reg)){
   mat.plot[i,4] <- round(list.gfp.max[[i]],2)
   mat.plot[i,5] <- round(list.rsd[[i]],3)
 }
-# Plot table 
-tbl <- tableGrob(mat.plot)
-plot(tbl)
-```
-
-Plot each assay individually (Right)
-```{r }
-par(mfcol=c(3,3), mar=c(5,5,3,3))
+# Plot each assay individually
+par(mfcol=c(2,2), mar=c(5,5,3,3))
 for(i in 1:length(list.reg)){
   plot(list.reg[[i]], col=col.wheel[i], 
        xlab="MAb Concentration (ng/ml)",
        ylab="% Infection", ylim=c(0,1.5), 
        pch=19, cex=0.5, axes = T, lty=3, main=names(list.reg)[i])
-  suppressWarnings(arrows(conc, list.sd[[i]][1,], conc, list.sd[[i]][2,], length=0.05, angle=90, code=3, lty=1, col=col.wheel[i]))
+  arrows(conc, list.sd[[i]][1,], conc, list.sd[[i]][2,], length=0.05, angle=90, code=3, lty=1, col=col.wheel[i])
   # Add ED50 and SDR on the plot 
   text(x=5, y=1.4, paste("ED50=",mat.plot[i,"ED50"],sep=""),cex = 0.7)
   text(x=5, y=1.3, paste("RSD=",mat.plot[i,"RSD"],sep=""),cex = 0.7)
 }
-```
+# Plot table 
+tbl <- tableGrob(mat.plot)
+plot(tbl)
+dev.off()
+}
 
 
-  
-  
-  
-  
