@@ -29,6 +29,9 @@ in the input folder (NOTE: if you have unrelated csvs in that folder the script 
 currently performs the same operation on ALL .csv files in the input folder). 
 (process_csv_to_pdf_batch.R)
 
+In addition, the script generates a master table of all assay attributes (ED50, SDR, etc) in the output folder that can be
+used to query across all experiments. 
+
 Usage (assuming you are in the scripts folder):
 
 Rscript --vanilla process_csv_to_pdf_batch.R "input_folder" "output_folder"
