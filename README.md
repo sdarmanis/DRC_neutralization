@@ -31,4 +31,4 @@ currently performs the same operation on ALL .csv files in the input folder).
 
 Usage (assuming you are in the scripts folder):
 
-Rscript --vanilla process_csv_to_pdf_batch.R "full path to input csv" "pdf_label" "full path to output directory"
+Rscript --vanilla process_csv_to_pdf_batch.R "input_folder" "output_folder"
