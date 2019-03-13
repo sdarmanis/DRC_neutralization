@@ -30,6 +30,9 @@ abs.right <- paste("AB_R",1:15, sep="_")
 # Create color wheel 
 col.wheel <- tableau_color_pal(palette = "tableau10")(10)
 ################################################################# 
+# List to store tables of ED50 etc .. 
+list.tables <- list()
+################################################################# 
 
 # Start looping over each csv
 for(k in 1:length(all.files)){
@@ -129,6 +132,7 @@ for(i in 1:length(list.reg)){
   text(x=5, y=1.3, paste("RSD=",mat.plot[i,"RSD"],sep=""),cex = 0.7)
 }
 # Plot table 
+mat.plot.l <- mat.plot
 tbl <- tableGrob(mat.plot)
 plot(tbl)
 dev.off()
@@ -205,8 +209,13 @@ for(i in 1:length(list.reg)){
 }
 # Plot table 
 tbl <- tableGrob(mat.plot)
+mat.plot.r <- mat.plot
 plot(tbl)
 dev.off()
+# Combine left and right tables 
+mat.plot.l$plate <- paste(all.appends[k], "L", sep="_")
+mat.plot.r$plate <- paste(all.appends[k], "R", sep="_")
+list.tables[[k]] <- rbind(mat.plot.l,mat.plot.r)
 }
-
-
+temp <- do.call(rbind,list.tables)
+write.table(temp, file=paste(args[[2]],"report_all_plates.csv", sep=""))
