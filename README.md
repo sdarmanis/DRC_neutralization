@@ -1,7 +1,7 @@
-#### Calculation of ED50, RSD values and plotting of corresponding dose-response curves
-### Instructions 
+# Calculation of ED50, RSD values and plotting of corresponding dose-response curves
+## Instructions 
 
-## There are three options: 
+### There are three options: 
 
 **1**. A .Rmd R Markdown file that can be opened with RStudio and executed interactivelly 
 from within Rstudio. 
@@ -15,8 +15,10 @@ This script accepts a single .csv file as an input and can be used in the follow
 i) Make sure R is installed and in your path. To install R on Mac go [here](https://cran.r-project.org/bin/macosx/): 
 ii) From terminal, assuming that you are in DRC_neutralization/scripts : 
 
-'Rscript --vanilla process_csv_to_pdf.R "full path to input csv" "pdf_label" "full path to output directory"'
-  
+```
+Rscript --vanilla process_csv_to_pdf.R <full path to input csv> <pdf_label> <full path to output directory>
+```
+
 Output pdf will be named: "pdf_label"_left_plate_reg and "pdf_label"_right_plate_reg
 
 
@@ -31,5 +33,6 @@ In addition, the script generates a master table of all assay attributes (ED50, 
 used to query across all experiments. 
 
 Usage (assuming you are in the scripts folder):
-
-'Rscript --vanilla process_csv_to_pdf_batch.R "input_folder" "output_folder"'
+```
+Rscript --vanilla process_csv_to_pdf_batch.R "input_folder" "output_folder"
+```
