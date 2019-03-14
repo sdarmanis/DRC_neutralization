@@ -218,4 +218,4 @@ mat.plot.r$plate <- paste(all.appends[k], "R", sep="_")
 list.tables[[k]] <- rbind(mat.plot.l,mat.plot.r)
 }
 temp <- do.call(rbind,list.tables)
-write.table(temp, file=paste(args[[2]],"report_all_plates.csv", sep=""))
+write.table(temp, file=paste(args[[2]],"report_all_plates.csv", sep=""), sep = ",")
