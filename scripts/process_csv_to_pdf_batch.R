@@ -66,6 +66,9 @@ list.sd <- list()
 pdf(paste(args[2],all.appends[k],"_L.pdf",sep=""),10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
+  # Check if the rows are actually used 
+  aa <- grep(pairs[i,1], data$Well.ID)
+  if(length(aa) != 0)  {
   # Subset data from main data frame 
   pair.1 <- data[grep(pairs[i,1], data$Well.ID),][1:10,] # 1:10 selects X02-X11
   pair.2 <- data[grep(pairs[i,2], data$Well.ID),][1:10,]
@@ -88,7 +91,9 @@ for(i in 1:nrow(pairs)){
   # DOES IT MAKE SENSE ? 
   if(length(which(is.infinite(cor.means)==T)) ==0){
     # Fit using a 4-parameter log logistic model and store the model
-    list.reg[[i]] <- drm(cor.means ~ conc,fct = LL.4())
+    list.reg[[i]] <- drm(cor.means ~ conc,fct = LL.4(), control = drmc(errorm=F, trace=T, otrace=T))
+    # If the model has converged. Apparently if it does conver
+    if(length(list.reg[[i]]$convergence)!=1){
     # Get ED5,10 and 50 values 
     list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta", display=F)
     # Also store %GFP and max antibody 
@@ -101,9 +106,9 @@ for(i in 1:nrow(pairs)){
          ylab="% Infection", ylim=c(0,1.5), 
          pch=19, cex=0.5, axes = F)
     arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
-    par(new=T)
+    par(new=T)}}
   }}
-legend("right", "top", legend=abs.left, fill=col.wheel[1:length(abs.left)]) 
+legend(x=0.01, y=0.2, legend=abs.left[1:length(list.reg)], fill=col.wheel[1:length(list.reg)], ncol=2) 
 axis(side=1, c(0.01,0.1,1,10,100,1000,10000))
 axis(side=2, seq(0,1.5,0.1))
 # Name the listss 
@@ -122,6 +127,7 @@ for(i in 1:length(list.reg)){
 # Plot each assay individually
 par(mfcol=c(2,2), mar=c(5,5,3,3))
 for(i in 1:length(list.reg)){
+  if(length(list.reg[[i]]$convergence)!=1){
   plot(list.reg[[i]], col=col.wheel[i], 
        xlab="MAb Concentration (ng/ml)",
        ylab="% Infection", ylim=c(0,1.5), 
@@ -130,7 +136,7 @@ for(i in 1:length(list.reg)){
   # Add ED50 and SDR on the plot 
   text(x=5, y=1.4, paste("ED50=",mat.plot[i,"ED50"],sep=""),cex = 0.7)
   text(x=5, y=1.3, paste("RSD=",mat.plot[i,"RSD"],sep=""),cex = 0.7)
-}
+}}
 # Plot table 
 mat.plot.l <- mat.plot
 tbl <- tableGrob(mat.plot)
@@ -142,6 +148,9 @@ dev.off()
 pdf(paste(args[2],all.appends[k],"_R.pdf",sep=""),10,10)
 # Iterate for every row pair 
 for(i in 1:nrow(pairs)){
+  # Check if the rows are actually used 
+  aa <- grep(pairs[i,1], data$Well.ID)
+  if(length(aa) != 0)  {
   # Subset data from main data frame 
   pair.1 <- data[grep(pairs[i,1], data$Well.ID),][11:20,] 
   pair.2 <- data[grep(pairs[i,2], data$Well.ID),][11:20,]
@@ -164,7 +173,9 @@ for(i in 1:nrow(pairs)){
   # DOES IT MAKE SENSE ? 
   if(length(which(is.infinite(cor.means)==T)) ==0){
     # Fit using a 4-parameter log logistic model and store the model
-    list.reg[[i]] <- drm(cor.means ~ conc,fct = LL.4())
+    list.reg[[i]] <- drm(cor.means ~ conc,fct = LL.4(), control = drmc(errorm=F, trace=T, otrace=T))
+    # If the model has converged. Apparently if it does conver
+    if(length(list.reg[[i]]$convergence)!=1){
     # Get ED5,10 and 50 values 
     list.eds[[i]] <- ED(object = list.reg[[i]], c(5,10,50), interval = "delta", display=F)
     # Also store %GFP and max antibody 
@@ -177,9 +188,9 @@ for(i in 1:nrow(pairs)){
          ylab="% Infection", ylim=c(0,1.5), 
          pch=19, cex=0.5, axes = F)
     arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
-    par(new=T)
+    par(new=T)}}
   }}
-legend("right", "top", legend=abs.right, fill=col.wheel[1:length(abs.right)]) 
+legend(x=0.01, y=0.2, legend=abs.right[1:length(list.reg)], fill=col.wheel[1:length(list.reg)], ncol = 2) 
 axis(side=1, c(0.01,0.1,1,10,100,1000,10000))
 axis(side=2, seq(0,1.5,0.1))
 # Name the listss 
@@ -198,6 +209,7 @@ for(i in 1:length(list.reg)){
 # Plot each assay individually
 par(mfcol=c(2,2), mar=c(5,5,3,3))
 for(i in 1:length(list.reg)){
+  if(length(list.reg[[i]]$convergence)!=1){
   plot(list.reg[[i]], col=col.wheel[i], 
        xlab="MAb Concentration (ng/ml)",
        ylab="% Infection", ylim=c(0,1.5), 
@@ -206,7 +218,7 @@ for(i in 1:length(list.reg)){
   # Add ED50 and SDR on the plot 
   text(x=5, y=1.4, paste("ED50=",mat.plot[i,"ED50"],sep=""),cex = 0.7)
   text(x=5, y=1.3, paste("RSD=",mat.plot[i,"RSD"],sep=""),cex = 0.7)
-}
+}}
 # Plot table 
 tbl <- tableGrob(mat.plot)
 mat.plot.r <- mat.plot
