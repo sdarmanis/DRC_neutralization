@@ -300,5 +300,5 @@ list.tables[[k]] <- rbind(mat.plot.l,mat.plot.r)
 # Make master table and save it
 #################################################################
 temp <- do.call(rbind,list.tables)
-write.table(temp, file=paste(args[[2]],"report_all_plates.csv", sep=""), sep = ",")
+write.table(temp, file=paste(args[[2]],"report_all_plates.csv", sep=""), sep = ",", row.names = F, quote=F)
 #################################################################
