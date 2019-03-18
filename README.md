@@ -31,7 +31,7 @@ currently performs the same operation on ALL .csv files in the input folder).
 In addition, the script generates a master table of all assay attributes (ED50, SDR, etc) in the output folder that can be
 used to query across all experiments. **(all paths are absolute)** 
 
-**Current assumptions for legend csv files:** *i)* plate names are *<input_csv_name>*_legend.csv (example : LG128_Plate1_legend.csv), *ii)* assay names are in order going from the top of the plate to the bottom for each side of the plate (left or right)
+**Current assumptions for legend csv files:** *i)* plate names are *<input_csv_name>*_legend.csv (example : LG128_Plate1_legend.csv), *ii)* assay names are in order going from the top of the plate to the bottom for each side of the plate (left or right).
 
 Usage (assuming you are in the scripts folder):
 ```
