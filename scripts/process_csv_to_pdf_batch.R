@@ -2,10 +2,11 @@ args = commandArgs(trailingOnly=TRUE)
 # Print the input file
 message(paste("Input directory is:", args[1]))
 message(paste("Output directory is:", args[2]))
+message(paste("Input directory for legends is:", args[3]))
 #################################################################
 # test if there is at least one argument: if not, return an error
-if (length(args)!=2) {
-  stop("Input and output directory need to be supplied", call.=FALSE)
+if (length(args)!=3) {
+  stop("Input (x2) and output directory need to be supplied", call.=FALSE)
 }
 #################################################################
 # Libraries. Make sure they installed or install otherwise
@@ -19,14 +20,11 @@ if(!require(ggthemes)){install.packages("ggthemes", repos='http://cloud.r-projec
 
 # Get all csv files in input directory 
 all.files <- list.files(args[1])
+# Get all csv files in legend iinput 
+all.legends <- list.files(args[3])
 # Remove .csv from the name and use the rest as an append string for the output 
 all.appends <- gsub(".csv", "", all.files)
 #################################################################
-# Provide a vector of antibody names 
-# For now its just AB1, AB2, etc ..
-# NEED TO Allow input of names from another csv file in the future..
-abs.left <- paste("AB_L",1:15, sep="_")
-abs.right <- paste("AB_R",1:15, sep="_")
 #################################################################
 # Create color wheel 
 col.wheel <- tableau_color_pal(palette = "tableau10")(10)
@@ -40,6 +38,21 @@ for(k in 1:length(all.files))
   { #0
 # Get plate name (directory+filename)
 plate <- paste(args[1],all.files[k], sep="")
+# Get only plate name
+platename <- strsplit(strsplit(plate,"/",fixed = t)[[1]][length(strsplit(plate,"/",fixed = t)[[1]])],".", fixed = T)[[1]][1]
+# Provide a vector of antibody names 
+# If no legend is found in /input_legend than use generic names 
+# Otherwise import and use the real names 
+# For now I assume that the names are ordered (and so the column with the well is not used)
+aa <- grep(platename, all.legends)
+if(length(aa)==0){ #Name IF loop 
+  abs.left <- paste("AB_L",1:15, sep="_")
+  abs.right <- paste("AB_R",1:15, sep="_")
+} else {
+  legend.in <- read.csv(paste(args[[3]],all.legends[aa], sep=""), sep=",", header=T)
+  abs.left <- as.character(legend.in$rvp[which(legend.in$plate_half=="L")])
+  abs.righ <- as.character(legend.in$rvp[which(legend.in$plate_half=="R")])
+}
 # Load data 
 data <- read.csv(plate, sep=",", skip = 1) 
 # Convert Well ID to character 
@@ -96,6 +109,9 @@ if(length(grep(11, data$Well.ID))!=0) {#1
       # Get average values 
       cor.means <- rowMeans(cbind(cor.pair.1, cor.pair.2))
       cor.st <- apply(cbind(cor.pair.1, cor.pair.2), MARGIN = 1, range)
+      # Convert to percent scale
+      cor.means <- cor.means*100
+      cor.st <- cor.st*100
       # Store in list 
       list.means[[i]] <- cor.means
       list.sd[[i]] <- cor.st
@@ -115,7 +131,7 @@ if(length(grep(11, data$Well.ID))!=0) {#1
           # Plot
           plot(list.reg[[i]], col=col.wheel[i], 
                xlab="MAb Concentration (ng/ml)",
-               ylab="% Infection", ylim=c(0,1.5), 
+               ylab="% Infection", ylim=c(0,120), 
                pch=19, cex=0.5, axes = T)
           arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
           par(new=T)
@@ -160,7 +176,7 @@ for(i in 1:length(list.reg)){
   if(length(list.reg[[i]]$convergence)!=1){
     plot(list.reg[[i]], col=col.wheel[i], 
          xlab="MAb Concentration (ng/ml)",
-         ylab="% Infection", ylim=c(0,1.5), 
+         ylab="% Infection", ylim=c(0,120), 
          pch=19, cex=0.5, axes = T, lty=3, main=names(list.reg)[i])
     arrows(conc, list.sd[[i]][1,], conc, list.sd[[i]][2,], length=0.05, angle=90, code=3, lty=1, col=col.wheel[i])
     # Add ED50 and SDR on the plot 
@@ -207,6 +223,9 @@ if(length(grep(23, data$Well.ID))!=0) {#1
       # Get average values 
       cor.means <- rowMeans(cbind(cor.pair.1, cor.pair.2))
       cor.st <- apply(cbind(cor.pair.1, cor.pair.2), MARGIN = 1, range)
+      # Convert to percent scale
+      cor.means <- cor.means*100
+      cor.st <- cor.st*100
       # Store in list 
       list.means[[i]] <- cor.means
       list.sd[[i]] <- cor.st
@@ -226,7 +245,7 @@ if(length(grep(23, data$Well.ID))!=0) {#1
           # Plot
           plot(list.reg[[i]], col=col.wheel[i], 
                xlab="MAb Concentration (ng/ml)",
-               ylab="% Infection", ylim=c(0,1.5), 
+               ylab="% Infection", ylim=c(0,120), 
                pch=19, cex=0.5, axes = T)
           arrows(conc, cor.st[1,], conc, cor.st[2,], length=0.05, angle=90, code=3, lty=3, col=col.wheel[i])
           par(new=T)
@@ -271,7 +290,7 @@ if(length(grep(23, data$Well.ID))!=0) {#1
     if(length(list.reg[[i]]$convergence)!=1){
       plot(list.reg[[i]], col=col.wheel[i], 
            xlab="MAb Concentration (ng/ml)",
-           ylab="% Infection", ylim=c(0,1.5), 
+           ylab="% Infection", ylim=c(0,120), 
            pch=19, cex=0.5, axes = T, lty=3, main=names(list.reg)[i])
       arrows(conc, list.sd[[i]][1,], conc, list.sd[[i]][2,], length=0.05, angle=90, code=3, lty=1, col=col.wheel[i])
       # Add ED50 and SDR on the plot 
